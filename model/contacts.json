@@ -25,7 +25,7 @@
   },
   {
     "id": 5,
-    "name": "Cyrus Jackson",
+    "name": "Cyrus Samuel Jackson",
     "email": "nibh@semsempererat.com",
     "phone": "(501) 472-5218"
   },
@@ -58,5 +58,17 @@
     "name": "Alec Howard",
     "email": "Donec.elementum@scelerisquescelerisquedui.net",
     "phone": "(748) 206-2688"
+  },
+  {
+    "id": "ce3a649f-0ec1-4a3e-a91e-63ef9cbfa098",
+    "name": "Freddie Mercury",
+    "email": "freddie@gmail.com",
+    "phone": "111-11-11"
+  },
+  {
+    "id": "6ab7d631-49f9-4546-bcca-4c17ff856aff",
+    "name": "Roger Taylor",
+    "email": "gohn@gmail.com",
+    "phone": "222-22-22"
   }
 ]
