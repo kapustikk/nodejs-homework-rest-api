@@ -8,10 +8,6 @@ const userSchema = new Schema(
         type: String,
         required: [true, 'Set email'],
         unique: true,
-        // validate(value) {
-        //     const re = /\S+@\S+\.\S+/
-        //     return re.test(String(value).toLowerCase())
-        // }
     },
     password: {
         type: String,

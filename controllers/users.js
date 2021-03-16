@@ -5,8 +5,8 @@ require('dotenv').config()
 const SECRET_KEY = process.env.JWT_SECRET
 
 async function register (req, res, next) {
+  const {email, password } = req.body
     try {
-      const { email } = req.body
       const user = await Users.findByEmail(email)
 if (user) {
     return res.status(HttpCode.CONFLICT).json({
@@ -17,7 +17,7 @@ if (user) {
     })
 }
 
-      const newUser = await Users.create(req.body)
+      const newUser = await Users.create(email, password)
       return res.status(HttpCode.CREATED).json({
         status: 'success',
         code: HttpCode.CREATED,
@@ -34,14 +34,14 @@ if (user) {
 
   const login = async (req, res, next) => {
     try {
-        const { email,password } = req.body
+      const { email,password } = req.body
         const user = await Users.findByEmail(email)
-  if (!user || user.validPassword(password)) {
+  if (!user || !user.validPassword(password)) {
       return res.status(HttpCode.UNAUTHORIZED).json({
           status: 'error',
           code: HttpCode.UNAUTHORIZED,
           data: 'Unauthorized',
-          message: 'Email or password is wrong'
+          message: 'Invalid credentials'
       })
   }
   
@@ -62,7 +62,14 @@ if (user) {
       }
   }
 
-  const logout = async (req, res, next) => {}
+  const logout = async (req, res, next) => {
+    const id = req.user.id
+    await Users.updateToken(id, null)
+    return res.status(HttpCode.NO_CONTENT).json({
+      message: 'Nothing'
+    })
+
+  }
 
 
   module.exports = {register, login, logout}
