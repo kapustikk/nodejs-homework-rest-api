@@ -9,6 +9,13 @@ const HttpCode = {
     INTERNAL_SERVER_ERROR: 500,
 };
 
+const Subscription = {
+    FREE: 'free',
+    PRO: 'pro',
+    PREMIUM: 'premium',
+  };
+
 module.exports = {
     HttpCode,
+    Subscription
 };

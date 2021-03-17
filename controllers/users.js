@@ -36,7 +36,8 @@ if (user) {
     try {
       const { email,password } = req.body
         const user = await Users.findByEmail(email)
-  if (!user || !user.validPassword(password)) {
+        const isValidPassword = await user.validPassword(password)
+  if (!user || !isValidPassword) {
       return res.status(HttpCode.UNAUTHORIZED).json({
           status: 'error',
           code: HttpCode.UNAUTHORIZED,
@@ -66,10 +67,47 @@ if (user) {
     const id = req.user.id
     await Users.updateToken(id, null)
     return res.status(HttpCode.NO_CONTENT).json({
-      message: 'Nothing'
+      message: 'No content'
     })
 
   }
 
+  const current = async (req, res, next) => {
+    try {
+      return res.status(HttpCode.OK).json({
+        status: 'success',
+        code: HttpCode.OK,
+        data: {
+          id: req.user.id,
+          email: req.user.email,
+          subscription: req.user.subscription
+        }
+      })
+    } catch (e) {
+      next(e)
+    }
+  }
 
-  module.exports = {register, login, logout}
+  const updateSubscription = async (req, res, next) => {
+    try {
+      const id = req.user.id
+      const subscription = req.body.subscription
+      await Users.updateSubscription(id, subscription)
+
+      return res.status(HttpCode.OK).json({
+        status: 'success',
+        code: HttpCode.OK,
+        data: {
+          id: req.user.id,
+          email: req.user.email,
+          subscription
+        }
+      })
+    } catch (e) {
+      next(e)
+    }
+  }
+
+
+
+  module.exports = {register, login, logout, current, updateSubscription}

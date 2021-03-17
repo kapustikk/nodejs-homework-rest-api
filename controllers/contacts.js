@@ -4,12 +4,12 @@ const Contacts = require('../model/index')
 const getAllContacts = async (req, res, next) => {
     try {
       const userId = req.user.id 
-      const contacts = await Contacts.listContacts(userId)
+      const contacts = await Contacts.listContacts(userId, req.query)
       return res.json({
         status: 'success',
         code: 200,
         data: {
-          contacts,
+          ...contacts,
         },
       })
     } catch (e) {
