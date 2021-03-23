@@ -1,6 +1,10 @@
 const jwt = require('jsonwebtoken')
 const Users = require('../model/users')
+const fs = require('fs').promises
+const path = require('path')
+const Jimp = require('jimp')
 const {HttpCode} = require('../helpers/constants')
+const createFolderIsExist = require('../helpers/create-dir')
 require('dotenv').config()
 const SECRET_KEY = process.env.JWT_SECRET
 
@@ -25,6 +29,7 @@ if (user) {
           id: newUser.id,
           email: newUser.email,
           subscription: newUser.subscription,
+          avatar: newUser.avatar,
         },
       })
     } catch (e) {
@@ -36,7 +41,7 @@ if (user) {
     try {
       const { email,password } = req.body
         const user = await Users.findByEmail(email)
-        const isValidPassword = await user.validPassword(password)
+        const isValidPassword = await user?.validPassword(password)
   if (!user || !isValidPassword) {
       return res.status(HttpCode.UNAUTHORIZED).json({
           status: 'error',
@@ -108,6 +113,42 @@ if (user) {
     }
   }
 
+  const avatar = async (req, res, next) => {
+    try {
+    const id = req.user.id
+    const avatarURL = await saveAvatarToStatic(req)
+     await Users.updateAvatar(id, avatarURL)
+     return res.json({
+       status: 'success',
+       code: HttpCode.OK,
+       data: {
+       avatarURL
+       }
+     })
+    } catch(e) {
+      next(e)
+    }
+  }
 
+const saveAvatarToStatic = async (req) => {
+  const id = req.user.id
+  const AVATARS_OF_USERS = process.env.AVATARS_OF_USERS
+  const pathFile = req.file.path
+  const newNameAvatar = `${Date.now()}-${req.file.originalname}`
+  const img = await Jimp.read(pathFile)
+  img
+  .autocrop()
+  .cover(250, 250, Jimp.HORIZONTAL_ALIGN_CENTER | Jimp.VERTICAL_ALIGN_MIDDLE)
+  .writeAsync(pathFile)
+   await createFolderIsExist(path.join(AVATARS_OF_USERS, id))
+   await fs.rename(pathFile, path.join(AVATARS_OF_USERS, id, newNameAvatar))
+   const avatarURL = path.normalize(path.join(id, newNameAvatar)) 
+   try {
+     await fs.unlink(path.join(process.cwd(), AVATARS_OF_USERS, req.user.avatar),)
+   } catch (e) {
+     console.log(e.message)
+   }
+   return avatarURL
+}
 
-  module.exports = {register, login, logout, current, updateSubscription}
+  module.exports = {register, login, logout, current, updateSubscription, avatar}

@@ -1,4 +1,5 @@
 const Joi = require('joi')
+const { rawListeners } = require('../../../app')
 const { HttpCode, Subscription } = require('../../../helpers/constants')
 
 const schemaCreateUser = Joi.object({
@@ -40,4 +41,16 @@ module.exports.createUser = (req, res, next) => {
 
 module.exports.updateSubscription = (req, res, next) => {
   return validate(schemaUpdateSubscription, req.body, next)
+}
+
+module.exports.uploadAvatar = (req, res, next) => {
+  if (!req.file) {
+    return res.status(HttpCode.BAD_REQUEST).json({
+      status: "error",
+      code: HttpCode.BAD_REQUEST,
+      data: "forbidden",
+      message: "Field of avatar with file not found"
+  })
+  }
+  next()
 }
