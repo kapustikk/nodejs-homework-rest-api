@@ -4,13 +4,19 @@ const fs = require('fs').promises
 const path = require('path')
 const Jimp = require('jimp')
 const {HttpCode} = require('../helpers/constants')
+const EmailService = require('../services/email')
 const createFolderIsExist = require('../helpers/create-dir')
+const {nanoid} = require('nanoid')
+
 require('dotenv').config()
 const SECRET_KEY = process.env.JWT_SECRET
 
-async function register (req, res, next) {
-  const {email, password } = req.body
+
+const register = async (req, res, next) => {
+  const { email } = req.body
+
     try {
+
       const user = await Users.findByEmail(email)
 if (user) {
     return res.status(HttpCode.CONFLICT).json({
@@ -21,7 +27,11 @@ if (user) {
     })
 }
 
-      const newUser = await Users.create(email, password)
+      const verificationToken = nanoid()
+      const emailService = new EmailService(process.env.NODE_ENV)
+      await emailService.sendEmail(verificationToken, email)
+
+      const newUser = await Users.create({ ...req.body, verificationToken })
       return res.status(HttpCode.CREATED).json({
         status: 'success',
         code: HttpCode.CREATED,
@@ -42,7 +52,7 @@ if (user) {
       const { email,password } = req.body
         const user = await Users.findByEmail(email)
         const isValidPassword = await user?.validPassword(password)
-  if (!user || !isValidPassword) {
+  if (!user || !isValidPassword || !user.verificationToken) {
       return res.status(HttpCode.UNAUTHORIZED).json({
           status: 'error',
           code: HttpCode.UNAUTHORIZED,
@@ -151,4 +161,39 @@ const saveAvatarToStatic = async (req) => {
    return avatarURL
 }
 
-  module.exports = {register, login, logout, current, updateSubscription, avatar}
+   const verify = async (req, res, next) => {
+     try {
+        const user = await Users.findByVerificationToken(req.params.verificationToken)
+        if (user) {
+         await Users.updateVerificationToken(user.id, null)
+         return res.json({
+          status: 'success',
+          code: HttpCode.OK,
+          message: 'Verification successful',
+        })
+        }
+        return res.status(HttpCode.NOT_FOUND).json({
+          status: 'error',
+          code: HttpCode.NOT_FOUND,
+          data: 'Not found',
+          message: 'User not found',        })
+        // if (!user) {
+        //   return next({
+        //     status: 'error',
+        //     code: HttpCode.NOT_FOUND,
+        //     data: 'Not found',
+        //     message: 'User not found',
+        //   })
+        // }
+        // await Users.updateVerificationToken(user.id, null)
+        // return res.json({
+        //   status: 'success',
+        //   code: HttpCode.OK,
+        //   message: 'Verification successful',
+        // })
+     } catch(e) {
+       next(e)
+     }
+   }
+
+  module.exports = {register, login, logout, current, updateSubscription, avatar, verify}
